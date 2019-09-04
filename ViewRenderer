@@ -1,0 +1,131 @@
+using System;
+using System.Net.Http.Headers;
+using Foundation;
+using ObjCRuntime;
+using TuprasOnlineXamarinForms;
+using TuprasOnlineXamarinForms.iOS;
+using WebKit;
+using Xamarin.Forms;
+using Xamarin.Forms.Platform.iOS;
+
+[assembly: ExportRenderer(typeof(DisplayLinkWebView), typeof(DisplayLinkWebViewRenderer))]
+namespace TuprasOnlineXamarinForms.iOS
+{
+    public class DisplayLinkWebViewRenderer : ViewRenderer<DisplayLinkWebView, WKWebView>, IWKNavigationDelegate
+    {
+        WKWebView webView;
+
+        protected override void OnElementChanged(ElementChangedEventArgs<DisplayLinkWebView> e)
+        {
+            base.OnElementChanged(e);
+
+            if (Control == null)
+            {
+                var config = new WKWebViewConfiguration { };
+                webView = new WKWebView(Frame, config);
+                // Set the delegate here
+                webView = new WKWebView(this.Frame, new WKWebViewConfiguration());
+                webView.ScrollView.ScrollEnabled = true;
+                webView.ScrollView.Bounces = true;
+                webView.UIDelegate = MyWkUIDelegate();
+                webView.NavigationDelegate = new DisplayLinkWebViewDelegate();
+                SetNativeControl(webView);
+            }
+
+            if (e.NewElement != null)
+            {
+                if (e.NewElement.Uri == null)
+                {
+                    var webRequest = new NSMutableUrlRequest(new NSUrl("https://ybs-tupras.msappproxy.net/TuprasOnlineAuthenticator/index.aspx"));
+                    //var webRequest = new NSMutableUrlRequest(new NSUrl("https://www.cam-recorder.com"));
+                    webView.LoadRequest(webRequest);
+                }
+                else
+                {
+
+                    webView = new WKWebView(this.Frame, new WKWebViewConfiguration());
+                    webView.ScrollView.ScrollEnabled = true;
+                    webView.ScrollView.Bounces = true;
+                    webView.NavigationDelegate = new DisplayLinkWebViewDelegate();
+                    webView.WeakUIDelegate = this;
+                    SetNativeControl(webView);
+
+                    var webRequest = new NSMutableUrlRequest(new NSUrl(e.NewElement.Uri));
+                    webView.LoadRequest(webRequest);
+                }
+
+            }
+        }
+    }
+
+    public class DisplayLinkWebViewDelegate : WKNavigationDelegate, INSUrlConnectionDataDelegate
+    {
+    
+        public override void DecidePolicy(WKWebView webView, WKNavigationResponse navigationResponse, Action<WKNavigationResponsePolicy> decisionHandler)
+        {
+            NSHttpUrlResponse response;
+            response = (NSHttpUrlResponse)navigationResponse.Response;
+            var headers = response.AllHeaderFields;
+
+            foreach (var item in headers)
+            {
+                Console.WriteLine(item.Key);
+                if (item.Key.ToString() == "IsTuprasOnlineAuthenticated")
+                    App.IsAuthenticated = true;
+                if (item.Key.ToString() == "UserName")
+                    App.Username = StringCipher.Decrypt(item.Value.ToString(), "!!99Ozan07187!!").Replace("TUPRASNET\\", "");
+                if (item.Key.ToString() == "UserFullName")
+                    App.UserFullName = StringCipher.Decrypt(item.Value.ToString(), "!!99Ozan07187!!");
+                if (item.Key.ToString() == "UserDisplayName")
+                    App.UserDisplayName = StringCipher.Decrypt(item.Value.ToString(), "!!99Ozan07187!!");
+                if (item.Key.ToString() == "UserEmailAddress")
+                    App.UserEmailAddress = StringCipher.Decrypt(item.Value.ToString(), "!!99Ozan07187!!");
+                if (item.Key.ToString() == "UserEmployeeId")
+                    App.UserEmployeeId = StringCipher.Decrypt(item.Value.ToString(), "!!99Ozan07187!!");
+                if (item.Key.ToString() == "UserPhoto")
+                    App.UserProfilePhoto = item.Value.ToString();
+                if (item.Key.ToString() == "AndroidVersion")
+                    App.AndroidVersion = StringCipher.Decrypt(item.Value.ToString(), "!!99Ozan07187!!");
+                if (item.Key.ToString() == "iOSVersion")
+                    App.iOSVersion = StringCipher.Decrypt(item.Value.ToString(), "!!99Ozan07187!!");
+            }
+            decisionHandler(WKNavigationResponsePolicy.Allow);
+        }
+
+        public override void DecidePolicy(WKWebView webView, WKNavigationAction navigationAction, Action<WKNavigationActionPolicy> decisionHandler)
+        {
+            decisionHandler(WKNavigationActionPolicy.Allow);
+        }
+
+        public override void DidFinishNavigation(WKWebView webView, WKNavigation navigation)
+        {
+            Console.WriteLine("Site has finished loading!!!!!!!!!!");
+            App.HideProgress = true;
+
+            webView.EvaluateJavaScript(new NSString("alert('ozan')"), (result, error) => {
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine(error);
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+                Console.WriteLine("XXXXXXXXXXXXXXXXX");
+            });
+        }
+
+        [Export("connectionDidFinishLoading:")]
+        public void FinishedLoading(NSUrlConnection connection)
+        {
+            Console.WriteLine("Site has finished loading!!!!!!!!!!");
+            //webView.EvaluateJavaScript(new NSString("alert('ozan')"), (result, error) => { });
+        }
+    }
+
+
+}
