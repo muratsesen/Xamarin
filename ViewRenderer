@@ -27,7 +27,7 @@ namespace TuprasOnlineXamarinForms.iOS
                 webView = new WKWebView(this.Frame, new WKWebViewConfiguration());
                 webView.ScrollView.ScrollEnabled = true;
                 webView.ScrollView.Bounces = true;
-                webView.UIDelegate = MyWkUIDelegate();
+                webView.UIDelegate = MyWkWebViewDelegate();
                 webView.NavigationDelegate = new DisplayLinkWebViewDelegate();
                 SetNativeControl(webView);
             }
@@ -47,7 +47,7 @@ namespace TuprasOnlineXamarinForms.iOS
                     webView.ScrollView.ScrollEnabled = true;
                     webView.ScrollView.Bounces = true;
                     webView.NavigationDelegate = new DisplayLinkWebViewDelegate();
-                    webView.WeakUIDelegate = this;
+                    webView.WeakUIDelegate = new MyWkWebViewDelegate();
                     SetNativeControl(webView);
 
                     var webRequest = new NSMutableUrlRequest(new NSUrl(e.NewElement.Uri));
